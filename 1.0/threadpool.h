@@ -13,10 +13,13 @@ public:
     ThreadPool(size_t threadCount = 10);
     static std::shared_ptr<ThreadPool> getInstance();
     ~ThreadPool();
-    void addTask(std::function<void()>&& task) {
+    // 写个模板
+    template<typename T,typename... Args>
+    void addTask(T&& fun, Args&&... args ) {
         {
             std::unique_lock<std::mutex> lock(mutex);
-            tasks.push(task);
+            auto task = std::bind(std::forward<T>(fun),std::forward<Args>(args)...);  // ... 放在最后
+            tasks.emplace(task);
         }
         condition.notify_all();
     }
